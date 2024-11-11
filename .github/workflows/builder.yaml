@@ -25,11 +25,8 @@ jobs:
       - name: Detect untrusted community PR
         if: ${{ needs.check_for_membership.outputs.check-result == 'false' }}
         run: |
-          gh pr comment ${{ github.event.number }} \
-            --body "👽 Untrusted non Hazelcast PR, \`${GITHUB_JOB}\` must be [run manually](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})."
+          echo "Untrusted external PR. Must be reviewed by Hazelcast"
           exit 1
-        env:
-          GH_TOKEN: ${{ inputs.GITHUB_TOKEN }}
       - name: Checkout Code
         uses: actions/checkout@v4
       - name: Set up Java
