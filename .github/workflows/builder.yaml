@@ -1,0 +1,50 @@
+name: Builder
+
+on:
+  pull_request:
+
+jobs:
+  check_for_membership:
+    runs-on: ubuntu-latest
+    name: Check membership of given user
+    outputs:
+      check-result: ${{ steps.composite.outputs.check-result }}
+
+    steps:
+      - name: Action for membership check
+        id: composite
+        uses: hazelcast/hazelcast-tpm/membership@main
+        with:
+          organization-name: 'hazelcast'
+          member-name: ${{ github.event.pull_request.head.repo.owner.login }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+  default:
+    needs: [check_for_membership]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Detect untrusted community PR
+        if: ${{ needs.check_for_membership.outputs.check-result == 'false' }}
+        run: |
+          gh pr comment ${{ github.event.number }} \
+            --body "👽 Untrusted non Hazelcast PR, \`${GITHUB_JOB}\` must be [run manually](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})."
+          exit 1
+        env:
+          GH_TOKEN: ${{ inputs.GITHUB_TOKEN }}
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: temurin
+      - name: Build and test
+        run: |
+          set ${RUNNER_DEBUG:+-x}
+          mvn \
+            --batch-mode \
+            --errors \
+            --no-transfer-progress \
+            ${RUNNER_DEBUG:+--show-version} \
+           package
+          env:
+            HZ_LICENSEKEY: ${{ secrets.HAZELCAST_ENTERPRISE_KEY_V7 }}
