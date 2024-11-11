@@ -18,5 +18,5 @@ jobs:
         run: |
           set ${RUNNER_DEBUG:+-x}
           ls -al
-          env:
-            HZ_LICENSEKEY: ${{ secrets.HAZELCAST_ENTERPRISE_KEY_V7 }}
+        env:
+          HZ_LICENSEKEY: ${{ secrets.HAZELCAST_ENTERPRISE_KEY_V7 }}
